@@ -178,22 +178,20 @@ function register(bot) {
       'You will be notified shortly.'
     );
 
-    // Notify admin group/chat
-    const adminChatId = process.env.ADMIN_CHAT_ID;
-    if (adminChatId) {
-      const kbMod = require('../utils/keyboards');
-      await ctx.telegram.sendPhoto(adminChatId, fileId, {
-        caption:
-          `🧾 *Payment Verification Needed*\n\n` +
-          `Order #${order.id}\n` +
-          `User: ${ctx.from.username ? '@' + ctx.from.username : ctx.from.id}\n` +
-          `Product: ${order.category_name}\n` +
-          `Plan: ${order.plan_name}\n` +
-          `Amount: ₹${Number(order.amount).toFixed(2)}`,
-        parse_mode: 'Markdown',
-        ...kbMod.adminApproveReject(order.id)
-      });
-    }
+    // Notify admin group/chat — sends to every ID in ADMIN_CHAT_ID
+    const kbMod = require('../utils/keyboards');
+    const { notifyAdminsWithPhoto } = require('../utils/superAdmin');
+    await notifyAdminsWithPhoto(ctx.telegram, fileId, {
+      caption:
+        `🧾 *Payment Verification Needed*\n\n` +
+        `Order #${order.id}\n` +
+        `User: ${ctx.from.username ? '@' + ctx.from.username : ctx.from.id}\n` +
+        `Product: ${order.category_name}\n` +
+        `Plan: ${order.plan_name}\n` +
+        `Amount: ₹${Number(order.amount).toFixed(2)}`,
+      parse_mode: 'Markdown',
+      ...kbMod.adminApproveReject(order.id)
+    });
   });
 
   // ---- Profile + History ----
