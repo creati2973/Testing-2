@@ -16,4 +16,44 @@ function isSuperAdmin(telegramId) {
   return getSuperAdminIds().includes(String(telegramId));
 }
 
-module.exports = { getSuperAdminIds, isSuperAdmin };
+// ADMIN_CHAT_ID works the same way — one ID or a comma-separated list of
+// chat IDs to notify (screenshots, key-delivery reminders, etc). Use
+// notifyAdmins()/notifyAdminsWithPhoto() below to actually send to all of
+// them instead of passing the raw env var straight into telegram.send*.
+function getAdminChatIds() {
+  const raw = process.env.ADMIN_CHAT_ID || '';
+  return raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id.length > 0);
+}
+
+async function notifyAdmins(telegram, text, extra = {}) {
+  const ids = getAdminChatIds();
+  await Promise.all(
+    ids.map((id) =>
+      telegram.sendMessage(id, text, extra).catch((err) => {
+        console.error(`Failed to notify admin ${id}:`, err.message);
+      })
+    )
+  );
+}
+
+async function notifyAdminsWithPhoto(telegram, fileId, extra = {}) {
+  const ids = getAdminChatIds();
+  await Promise.all(
+    ids.map((id) =>
+      telegram.sendPhoto(id, fileId, extra).catch((err) => {
+        console.error(`Failed to notify admin ${id}:`, err.message);
+      })
+    )
+  );
+}
+
+module.exports = {
+  getSuperAdminIds,
+  isSuperAdmin,
+  getAdminChatIds,
+  notifyAdmins,
+  notifyAdminsWithPhoto
+};
