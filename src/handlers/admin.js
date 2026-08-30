@@ -54,17 +54,15 @@ function register(bot) {
     );
 
     // Notify admin(s) that a key needs to be delivered
-    const adminChatId = process.env.ADMIN_CHAT_ID;
-    if (adminChatId) {
-      await ctx.telegram.sendMessage(
-        adminChatId,
-        `🔑 Order #${orderId} approved — key delivery needed.\n` +
-        `Product: ${order.category_name} — ${order.plan_name}\n\n` +
-        `Reply to THIS message with the account/key details to send to the customer,\n` +
-        `or use /deliver ${orderId} <content>`,
-        { reply_markup: { force_reply: true } }
-      );
-    }
+    const { notifyAdmins } = require('../utils/superAdmin');
+    await notifyAdmins(
+      ctx.telegram,
+      `🔑 Order #${orderId} approved — key delivery needed.\n` +
+      `Product: ${order.category_name} — ${order.plan_name}\n\n` +
+      `Reply to THIS message with the account/key details to send to the customer,\n` +
+      `or use /deliver ${orderId} <content>`,
+      { reply_markup: { force_reply: true } }
+    );
   });
 
   bot.action(/^admin:reject:(\d+)$/, requireAdmin, async (ctx) => {
